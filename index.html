@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Puzzle - Từ Vựng Lớp 10</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        .game-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 2rem;
+            width: 100%;
+        }
+        @media (max-width: 768px) {
+            .game-content {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        .grid-wrapper {
+            border: 2px solid #cbd5e0;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .grid-container {
+            display: grid;
+            gap: 0;
+            border-collapse: collapse;
+        }
+        .grid-cell {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: #e2e8f0;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            position: relative;
+        }
+        .grid-cell.empty {
+            background-color: transparent;
+            border-color: transparent;
+        }
+        .grid-cell.input-cell {
+            background-color: #ffffff;
+            color: #2d3748;
+        }
+        .grid-cell.input-cell input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            text-transform: uppercase;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+        .grid-cell.input-cell:focus-within {
+            outline: 2px solid #63b3ed;
+            z-index: 10;
+        }
+        .grid-cell.highlighted {
+            background-color: #b3e0f9;
+        }
+        .grid-cell.correct {
+            background-color: #48bb78;
+            color: white;
+            font-weight: 700;
+        }
+        .grid-cell .clue-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .clues-container {
+            flex-grow: 1;
+        }
+        .clues-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .clue-item {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+        .clue-item.found {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .button {
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover:enabled {
+            transform: translateY(-2px);
+            box-shadow: 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .check-button {
+            background-color: #2563eb;
+            color: white;
+        }
+        .show-answers-button {
+            background-color: #f6ad55;
+            color: white;
+        }
+        .restart-button {
+            background-color: #48bb78;
+            color: white;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 2rem;
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            animation: fade-in 0.3s ease;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">Ô Chữ Từ Vựng Lớp 10</h1>
+        <p class="text-lg text-gray-600">Điền các từ còn thiếu dựa vào gợi ý để hoàn thành ô chữ!</p>
+
+        <div class="game-content mt-8">
+            <div id="grid-wrapper" class="grid-wrapper">
+                <div id="grid-container" class="grid-container"></div>
+            </div>
+            
+            <div class="clues-container">
+                <h3 class="text-xl font-bold mb-2 text-gray-700">Gợi ý:</h3>
+                <ul id="clues-list" class="clues-list"></ul>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="check-button" class="button check-button">Kiểm Tra</button>
+            <button id="show-answers-button" class="button show-answers-button">Hiện Đáp Án</button>
+            <button id="restart-button" class="button restart-button">Chơi Lại</button>
+        </div>
+    </div>
+    
+    <script>
+        const words = [
+            { word: "TELEPHONE", clue: "Thiết bị dùng để gọi điện thoại" },
+            { word: "INTERACTIVE", clue: "Có tính tương tác" },
+            { word: "LANGUAGE", clue: "Hệ thống giao tiếp bằng từ ngữ" },
+            { word: "COMPUTERS", clue: "Thiết bị điện tử để tính toán" },
+            { word: "COMMUNICATION", clue: "Sự trao đổi thông tin" },
+            { word: "INTERNET", clue: "Mạng lưới toàn cầu" },
+            { word: "INFORMATION", clue: "Dữ liệu, kiến thức" },
+            { word: "KNOWLEDGE", clue: "Sự hiểu biết, tri thức" },
+            { word: "TECHNOLOGY", clue: "Khoa học công nghệ" },
+            { word: "SCIENCE", clue: "Khoa học tự nhiên" },
+            { word: "DEVICE", clue: "Thiết bị" },
+            { word: "INNOVATION", clue: "Sự đổi mới, sáng tạo" },
+            { word: "RESEARCH", clue: "Nghiên cứu" },
+            { word: "STUDENTS", clue: "Học sinh, sinh viên" },
+            { word: "SOFTWARE", clue: "Phần mềm" }
+        ];
+
+        let puzzle = {};
+        const gridSize = 15;
+
+        function createPuzzle() {
+            const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
+            const placedWords = [];
+            let currentClueNumber = 1;
+
+            // Đặt các từ vào lưới một cách đơn giản (không nối)
+            const directions = ['across', 'down'];
+            words.forEach(entry => {
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+                    const direction = directions[Math.floor(Math.random() * directions.length)];
+                    
+                    if (canPlaceSimpleWord(entry.word, row, col, direction, grid)) {
+                        placeWord(entry.word, row, col, direction, grid, currentClueNumber);
+                        placedWords.push({
+                            ...entry,
+                            row,
+                            col,
+                            direction,
+                            clueNumber: currentClueNumber
+                        });
+                        currentClueNumber++;
+                        placed = true;
+                    }
+                    attempts++;
+                }
+            });
+
+            // Điền các ô còn trống bằng chữ cái ngẫu nhiên
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (!grid[r][c]) {
+                        grid[r][c] = {
+                            char: String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+                            isInput: false,
+                            clueNumber: null
+                        };
+                    }
+                }
+            }
+
+            puzzle = { grid, words: placedWords };
+            return puzzle;
+        }
+
+        // Hàm kiểm tra xem một từ có vừa vào lưới không
+        function canPlaceSimpleWord(word, row, col, direction, grid) {
+            const len = word.length;
+            if (direction === 'across') {
+                if (col + len > gridSize) return false;
+                for (let i = 0; i < len; i++) {
+                    if (grid[row][col + i] && grid[row][col + i].isInput) {
+                        return false; // Tránh đặt chồng lên từ khác
+                    }
+                }
+            } else { // down
+                if (row + len > gridSize) return false;
+                for (let i = 0; i < len; i++) {
+                    if (grid[row + i][col] && grid[row + i][col].isInput) {
+                        return false; // Tránh đặt chồng lên từ khác
+                    }
+                }
+            }
+            return true;
+        }
+
+        function placeWord(word, row, col, direction, grid, clueNumber) {
+            for (let i = 0; i < word.length; i++) {
+                const r = row + (direction === 'down' ? i : 0);
+                const c = col + (direction === 'across' ? i : 0);
+                grid[r][c] = {
+                    char: word[i],
+                    isInput: true,
+                    clueNumber: (i === 0) ? clueNumber : null
+                };
+            }
+        }
+
+        function renderPuzzle() {
+            const gridContainer = document.getElementById('grid-container');
+            const cluesList = document.getElementById('clues-list');
+            gridContainer.innerHTML = '';
+            cluesList.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
+            puzzle.grid.forEach((row, rIndex) => {
+                row.forEach((cell, cIndex) => {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'grid-cell';
+                    if (cell.isInput) {
+                        cellEl.classList.add('input-cell');
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = '1';
+                        input.dataset.row = rIndex;
+                        input.dataset.col = cIndex;
+
+                        input.oninput = (e) => {
+                            e.target.value = e.target.value.toUpperCase();
+                        };
+                        input.onfocus = handleFocus;
+                        cellEl.appendChild(input);
+
+                        if (cell.clueNumber) {
+                            const numberSpan = document.createElement('span');
+                            numberSpan.className = 'clue-number';
+                            numberSpan.textContent = cell.clueNumber;
+                            cellEl.appendChild(numberSpan);
+                        }
+                    } else {
+                        cellEl.classList.add('empty');
+                    }
+                    gridContainer.appendChild(cellEl);
+                });
+            });
+
+            puzzle.words.sort((a, b) => a.clueNumber - b.clueNumber).forEach(entry => {
+                const clueItem = document.createElement('li');
+                clueItem.className = 'clue-item';
+                clueItem.id = `clue-${entry.clueNumber}`;
+                clueItem.textContent = `${entry.clueNumber}. ${entry.clue} (${entry.direction === 'across' ? 'Ngang' : 'Dọc'})`;
+                cluesList.appendChild(clueItem);
+            });
+        }
+        
+        function handleFocus(e) {
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('highlighted'));
+
+            puzzle.words.forEach(word => {
+                const len = word.word.length;
+                let isPartOfWord = false;
+                if (word.direction === 'across') {
+                    if (row === word.row && col >= word.col && col < word.col + len) {
+                        isPartOfWord = true;
+                    }
+                } else { // down
+                    if (col === word.col && row >= word.row && row < word.row + len) {
+                        isPartOfWord = true;
+                    }
+                }
+                
+                if (isPartOfWord) {
+                    highlightWord(word);
+                }
+            });
+        }
+        
+        function highlightWord(word) {
+            for (let i = 0; i < word.word.length; i++) {
+                const r = word.row + (word.direction === 'down' ? i : 0);
+                const c = word.col + (word.direction === 'across' ? i : 0);
+                const input = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`);
+                if (input) {
+                    input.parentNode.classList.add('highlighted');
+                }
+            }
+        }
+
+        function checkAnswers() {
+            let allCorrect = true;
+            puzzle.words.forEach(word => {
+                let wordCorrect = true;
+                for (let i = 0; i < word.word.length; i++) {
+                    const r = word.row + (word.direction === 'down' ? i : 0);
+                    const c = word.col + (word.direction === 'across' ? i : 0);
+                    const input = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`);
+                    if (!input || input.value.toUpperCase() !== word.word[i]) {
+                        wordCorrect = false;
+                        allCorrect = false;
+                        break;
+                    }
+                }
+                if (wordCorrect) {
+                    for (let i = 0; i < word.word.length; i++) {
+                        const r = word.row + (word.direction === 'down' ? i : 0);
+                        const c = word.col + (word.direction === 'across' ? i : 0);
+                        const cell = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`).parentNode;
+                        cell.classList.add('correct');
+                    }
+                    document.getElementById(`clue-${word.clueNumber}`).classList.add('found');
+                }
+            });
+
+            if (allCorrect && puzzle.words.length > 0) {
+                showMessageBox('Chúc mừng! Bạn đã hoàn thành ô chữ!');
+            } else {
+                showMessageBox('Có vẻ như có một vài từ chưa đúng. Hãy thử lại!');
+            }
+        }
+
+        function showAnswers() {
+            puzzle.words.forEach(word => {
+                for (let i = 0; i < word.word.length; i++) {
+                    const r = word.row + (word.direction === 'down' ? i : 0);
+                    const c = word.col + (word.direction === 'across' ? i : 0);
+                    const input = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`);
+                    if (input) {
+                        input.value = word.word[i];
+                        input.parentNode.classList.add('correct');
+                    }
+                }
+                document.getElementById(`clue-${word.clueNumber}`).classList.add('found');
+            });
+        }
+
+        function showMessageBox(message) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box';
+            messageBox.innerHTML = `<p class="text-xl font-bold mb-4">${message}</p>`;
+            document.body.appendChild(messageBox);
+            setTimeout(() => {
+                messageBox.remove();
+            }, 3000);
+        }
+
+        function initGame() {
+            createPuzzle();
+            renderPuzzle();
+        }
+
+        window.onload = initGame;
+        
+        document.getElementById('check-button').onclick = checkAnswers;
+        document.getElementById('show-answers-button').onclick = showAnswers;
+        document.getElementById('restart-button').onclick = initGame;
+    </script>
+</body>
+</html>
